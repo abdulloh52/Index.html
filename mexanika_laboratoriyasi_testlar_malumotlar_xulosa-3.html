@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10233f">
+<title>Mexanika laboratoriyasi 3D — Interaktiv simulyatsiya</title>
+<style>
+:root{--navy:#10233f;--blue:#2563eb;--cyan:#06b6d4;--paper:#f3f7fc;--ink:#17243b;--muted:#64748b;--line:#dbe5f1;--green:#0f9f6e;--orange:#f59e0b}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(125deg,#10233f,#174b80);color:white;padding:24px 16px 28px}
+.wrap{max-width:1100px;margin:auto}header .eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#a8ddff;font-weight:800}
+h1{font-size:clamp(1.6rem,4vw,2.5rem);margin:.35rem 0 .6rem;line-height:1.12}header p{max-width:760px;color:#d9e8f8;line-height:1.55;margin:0}
+main{max-width:1100px;margin:18px auto;padding:0 12px 36px}
+.topcards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mini{background:white;border:1px solid var(--line);border-radius:15px;padding:13px}.mini b{display:block;font-size:.94rem}.mini span{font-size:.82rem;color:var(--muted)}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:thin}
+.tab{white-space:nowrap;border:1px solid #cbd8e8;border-radius:999px;background:white;padding:10px 14px;font-weight:750;color:#29405f;cursor:pointer}
+.tab.active{background:var(--blue);color:white;border-color:var(--blue)}
+.panel{display:none;background:white;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 24px #17365d0b}.panel.active{display:block}
+.panel h2{margin:0 0 5px;font-size:1.35rem}.intro{color:var(--muted);margin:0 0 16px;line-height:1.5}
+.labgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.controls,.visual{border:1px solid var(--line);border-radius:14px;padding:15px;min-width:0}
+.controls h3,.visual h3{font-size:1rem;margin:0 0 13px}
+.control{margin:15px 0}.control label{display:flex;justify-content:space-between;gap:12px;font-weight:650;font-size:.92rem}.control output{color:var(--blue);font-variant-numeric:tabular-nums;font-weight:800}
+input[type=range]{width:100%;accent-color:var(--blue);margin:10px 0 0;cursor:pointer}
+.scene{height:210px;background:linear-gradient(#eaf6ff 0 68%,#d6e7d9 68% 100%);border-radius:12px;position:relative;overflow:hidden;margin:8px 0 13px}
+.sun{position:absolute;right:22px;top:18px;width:30px;height:30px;border-radius:50%;background:#ffd166;box-shadow:0 0 0 8px #ffd16633}
+.ground{position:absolute;left:0;right:0;bottom:31px;height:3px;background:#63816e}
+.block{position:absolute;left:15%;bottom:34px;width:54px;height:42px;border-radius:7px;background:linear-gradient(135deg,#60a5fa,#1d4ed8);box-shadow:0 5px 0 #1e40af;display:flex;align-items:center;justify-content:center;color:white;font-weight:900;transition:left .2s,bottom .2s}
+.arrow{position:absolute;height:3px;background:#ef4444;top:40%;left:20%;width:100px;transform-origin:left center}
+.arrow:after{content:"";position:absolute;right:-1px;top:-5px;border-left:12px solid #ef4444;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.distline{position:absolute;left:15%;bottom:16px;width:60%;border-top:2px dashed #536a83}
+.distline:before,.distline:after{position:absolute;top:-9px;font-size:12px;color:#344a62}.distline:before{content:"0 m";left:0}.distline:after{content:attr(data-label);right:0}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.metric{padding:12px;border-radius:11px;background:#f1f6ff;border:1px solid #dce8ff}.metric span{display:block;color:var(--muted);font-size:.79rem}.metric strong{font-size:1.25rem;color:#173e78;font-variant-numeric:tabular-nums}
+.note{padding:11px 13px;border-left:4px solid var(--cyan);background:#effbff;border-radius:8px;margin-top:12px;line-height:1.5;font-size:.9rem}
+.formula{font-size:1.08rem;font-weight:800;color:#1e4f91;background:#f2f7ff;border-radius:9px;padding:10px 12px;margin:10px 0}
+.chart{width:100%;height:150px;background:#fbfdff;border:1px solid var(--line);border-radius:10px;display:block}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--blue);color:white}.btn.secondary{background:#e7eef8;color:#17365d}
+.quiz{margin-top:17px;border-top:1px solid var(--line);padding-top:15px}.quiz h3{margin:0 0 10px}.question{font-weight:750;margin-bottom:9px}.answers{display:grid;gap:8px}.answer{padding:10px 12px;text-align:left;border:1px solid #d5dfeb;background:white;border-radius:10px;cursor:pointer;color:var(--ink)}.answer:hover{border-color:var(--blue)}.answer.correct{background:#e5f8ef;border-color:#28a66d}.answer.wrong{background:#fff0ef;border-color:#e36c64}.feedback{min-height:25px;font-weight:700;margin-top:9px}
+footer{color:var(--muted);font-size:.82rem;line-height:1.5;padding:20px 4px}
+@media(max-width:720px){.labgrid{grid-template-columns:1fr}.topcards{grid-template-columns:1fr}.scene{height:190px}.panel{padding:12px}.controls,.visual{padding:12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">Interaktiv virtual laboratoriya</div><h1>Mexanika laboratoriyasi</h1><p>Mexanik ish, quvvat va energiyani tajriba orqali o‘rganing. Slayderlarni o‘zgartiring, jism harakatini kuzating, natijalarni solishtiring va bilimlaringizni sinang.</p></div></header>
+<main>
+<div class="topcards">
+ <div class="mini"><b>🎯 Maqsad</b><span>Fizik kattaliklar orasidagi bog‘lanishni tajribada aniqlash</span></div>
+ <div class="mini"><b>🧪 Ish usuli</b><span>Parametrni o‘zgartirish → kuzatish → xulosa chiqarish</span></div>
+ <div class="mini"><b>📱 Qurilma</b><span>Android telefon, planshet yoki kompyuter</span></div>
+</div>
+<nav class="tabs" aria-label="Simulyatsiya bo‘limlari">
+<button class="tab active" data-tab="work">1. Mexanik ish</button><button class="tab" data-tab="power">2. Quvvat</button><button class="tab" data-tab="kinetic">3. Kinetik energiya</button><button class="tab" data-tab="potential">4. Potensial energiya</button><button class="tab" data-tab="conserve">5. Energiya saqlanishi</button><button class="tab" data-tab="theory">6. Nazariy ma’lumot</button><button class="tab" data-tab="tests">7. Yakuniy test</button><button class="tab" data-tab="conclusion">8. Xulosa</button>
+</nav>
+<section class="panel active" id="work">
+<h2>1-modul. Mexanik ish</h2><p class="intro">Kuch siljish yo‘nalishida ta’sir qilsa, mexanik ish bajariladi. Kuch va siljish orasidagi burchak ham natijaga ta’sir qiladi.</p>
+<div class="labgrid"><div class="controls"><h3>Parametrlarni boshqaring</h3>
+<div class="control"><label for="force">Kuch, F <output id="forceOut">20 N</output></label><input id="force" type="range" min="0" max="100" value="20" step="5"></div>
+<div class="control"><label for="distance">Siljish, s <output id="distanceOut">5 m</output></label><input id="distance" type="range" min="0" max="20" value="5" step="1"></div>
+<div class="control"><label for="angle">Burchak, α <output id="angleOut">0°</output></label><input id="angle" type="range" min="0" max="180" value="0" step="15"></div>
+<div class="formula">A = F · s · cos α</div><div class="note" id="workNote">Kuch siljish bilan bir yo‘nalishda. Mexanik ish musbat.</div>
+</div><div class="visual"><h3>Virtual tajriba</h3><div class="scene"><div class="sun"></div><div class="ground"></div><div class="block" id="workBlock">m</div><div class="arrow" id="workArrow"></div><div class="distline" id="distLine" data-label="5 m"></div></div><div class="metrics"><div class="metric"><span>Mexanik ish</span><strong id="workValue">100 J</strong></div><div class="metric"><span>Kuchning siljish bo‘yicha tarkibi</span><strong id="forceComponent">20 N</strong></div></div><canvas id="workChart" class="chart" width="500" height="150" aria-label="Mexanik ish grafigi"></canvas></div></div>
+<div class="quiz"><h3>Tezkor savol</h3><div class="question">Jism siljimasa, unga kuch ta’sir qilayotgan bo‘lsa ham mexanik ish qancha?</div><div class="answers" data-correct="0"><button class="answer">0 J</button><button class="answer">Kuchga teng</button><button class="answer">Har doim 100 J</button></div><div class="feedback"></div></div>
+</section>
+<section class="panel" id="power">
+<h2>2-modul. Quvvat</h2><p class="intro">Quvvat — ishning bajarilish tezligini ifodalovchi fizik kattalik. Bir xil ish qisqaroq vaqtda bajarilsa, quvvat kattaroq bo‘ladi.</p>
+<div class="labgrid"><div class="controls"><h3>Parametrlarni boshqaring</h3>
+<div class="control"><label for="pforce">Kuch, F <output id="pforceOut">50 N</output></label><input id="pforce" type="range" min="10" max="100" value="50" step="10"></div>
+<div class="control"><label for="pdistance">Siljish, s <output id="pdistanceOut">10 m</output></label><input id="pdistance" type="range" min="1" max="20" value="10" step="1"></div>
+<div class="control"><label for="ptime">Vaqt, t <output id="ptimeOut">5 s</output></label><input id="ptime" type="range" min="1" max="20" value="5" step="1"></div>
+<div class="formula">P = A / t = F · s / t</div><div class="note" id="powerNote">Quvvat bajarilgan ish va vaqtga bog‘liq.</div>
+</div><div class="visual"><h3>Natija</h3><div class="scene"><div class="sun"></div><div class="ground"></div><div class="block" id="powerBlock">▶</div><div class="arrow"></div><div class="distline" data-label="siljish"></div></div><div class="metrics"><div class="metric"><span>Bajarilgan ish</span><strong id="powerWork">500 J</strong></div><div class="metric"><span>Quvvat</span><strong id="powerValue">100 W</strong></div></div><div class="note">Taqqoslash: ishni 2 baravar tez bajarish uchun vaqtni 2 baravar kamaytiring.</div></div></div>
+<div class="quiz"><h3>Tezkor savol</h3><div class="question">Bir xil 600 J ish 3 sekundda bajarilsa, quvvat qancha bo‘ladi?</div><div class="answers" data-correct="1"><button class="answer">100 W</button><button class="answer">200 W</button><button class="answer">1800 W</button></div><div class="feedback"></div></div>
+</section>
+<section class="panel" id="kinetic">
+<h2>3-modul. Kinetik energiya</h2><p class="intro">Kinetik energiya jismning harakati tufayli mavjud bo‘ladi. Tezlik 2 baravar oshsa, massa o‘zgarmaganda kinetik energiya 4 baravar ortadi.</p>
+<div class="labgrid"><div class="controls"><h3>Parametrlarni boshqaring</h3>
+<div class="control"><label for="kmass">Massa, m <output id="kmassOut">2 kg</output></label><input id="kmass" type="range" min="1" max="20" value="2" step="1"></div>
+<div class="control"><label for="speed">Tezlik, v <output id="speedOut">5 m/s</output></label><input id="speed" type="range" min="0" max="20" value="5" step="1"></div>
+<div class="formula">Eₖ = ½mv²</div><div class="note" id="kineticNote">Tezlik energiyaga kvadrat bog‘lanish bilan ta’sir qiladi.</div>
+</div><div class="visual"><h3>Harakat animatsiyasi</h3><div class="scene"><div class="sun"></div><div class="ground"></div><div class="block" id="kineticBlock">●</div><div class="distline" data-label="harakat"></div></div><div class="metrics"><div class="metric"><span>Kinetik energiya</span><strong id="kineticValue">25 J</strong></div><div class="metric"><span>Impuls emas, tezlik</span><strong id="kineticSpeed">5 m/s</strong></div></div><canvas id="kineticChart" class="chart" width="500" height="150" aria-label="Kinetik energiya grafigi"></canvas></div></div>
+<div class="quiz"><h3>Tezkor savol</h3><div class="question">Jism tezligi 2 baravar oshsa, uning kinetik energiyasi qanday o‘zgaradi?</div><div class="answers" data-correct="2"><button class="answer">2 baravar kamayadi</button><button class="answer">2 baravar ortadi</button><button class="answer">4 baravar ortadi</button></div><div class="feedback"></div></div>
+</section>
+<section class="panel" id="potential">
+<h2>4-modul. Potensial energiya</h2><p class="intro">Yer sirtiga yaqin sharoitda ko‘tarilgan jismning potensial energiyasi uning massasi va tanlangan sathdan balandligiga bog‘liq.</p>
+<div class="labgrid"><div class="controls"><h3>Parametrlarni boshqaring</h3>
+<div class="control"><label for="pmass">Massa, m <output id="pmassOut">2 kg</output></label><input id="pmass" type="range" min="1" max="20" value="2" step="1"></div>
+<div class="control"><label for="height">Balandlik, h <output id="heightOut">5 m</output></label><input id="height" type="range" min="0" max="20" value="5" step="1"></div>
+<div class="control"><label for="gravity">Erkin tushish tezlanishi, g <output id="gravityOut">9.8 m/s²</output></label><input id="gravity" type="range" min="1" max="10" value="9.8" step="0.2"></div>
+<div class="formula">Eₚ = mgh</div><div class="note">Balandlik ikki baravar oshsa, massa va g o‘zgarmaganda potensial energiya ham ikki baravar ortadi.</div>
+</div><div class="visual"><h3>Balandlik modeli</h3><div class="scene"><div class="sun"></div><div class="ground"></div><div class="block" id="potentialBlock" style="left:43%">m</div><div class="distline" data-label="sath"></div></div><div class="metrics"><div class="metric"><span>Potensial energiya</span><strong id="potentialValue">98 J</strong></div><div class="metric"><span>Balandlik</span><strong id="potentialHeight">5 m</strong></div></div></div></div>
+<div class="quiz"><h3>Tezkor savol</h3><div class="question">2 kg jism 5 m balandlikda turibdi. g = 10 m/s² bo‘lsa, potensial energiyasi qancha?</div><div class="answers" data-correct="1"><button class="answer">25 J</button><button class="answer">100 J</button><button class="answer">50 J</button></div><div class="feedback"></div></div>
+</section>
+<section class="panel" id="conserve">
+<h2>5-modul. Energiyaning saqlanishi</h2><p class="intro">Ishqalanish hisobga olinmagan ideal modelda mexanik energiya saqlanadi: potensial energiya kamayganda kinetik energiya ortadi.</p>
+<div class="labgrid"><div class="controls"><h3>Parametrlarni boshqaring</h3>
+<div class="control"><label for="ctotal">Boshlang‘ich balandlik, H <output id="ctotalOut">10 m</output></label><input id="ctotal" type="range" min="1" max="20" value="10" step="1"></div>
+<div class="control"><label for="cmass">Massa, m <output id="cmassOut">2 kg</output></label><input id="cmass" type="range" min="1" max="10" value="2" step="1"></div>
+<div class="control"><label for="cheight">Joriy balandlik, h <output id="cheightOut">6 m</output></label><input id="cheight" type="range" min="0" max="10" value="6" step="1"></div>
+<div class="formula">E = Eₖ + Eₚ = const</div><div class="note">Modelda jism tinch holatdan tushadi, h₀ = H va boshlang‘ich kinetik energiya nol deb olinadi. g = 9.8 m/s².</div>
+</div><div class="visual"><h3>Qiyalikdagi jism</h3><div class="scene"><div class="sun"></div><div class="ground"></div><div style="position:absolute;left:14%;bottom:35px;width:72%;height:5px;background:#a78bfa;transform:rotate(0deg);border-radius:5px"></div><div class="block" id="conserveBlock">●</div></div><div class="metrics"><div class="metric"><span>Potensial energiya</span><strong id="cEp">117.6 J</strong></div><div class="metric"><span>Kinetik energiya</span><strong id="cEk">78.4 J</strong></div><div class="metric"><span>Jami mexanik energiya</span><strong id="cE">196 J</strong></div><div class="metric"><span>Tezlik</span><strong id="cV">8.85 m/s</strong></div></div><div class="note" id="conserveNote">Jami mexanik energiya o‘zgarmaydi.</div></div></div>
+<div class="quiz"><h3>Tezkor savol</h3><div class="question">Ishqalanish bo‘lmasa, jism pastga tushganda energiya qanday o‘zgaradi?</div><div class="answers" data-correct="0"><button class="answer">Potensial energiya kinetik energiyaga aylanadi</button><button class="answer">Jami energiya yo‘qoladi</button><button class="answer">Kinetik energiya doim nol bo‘ladi</button></div><div class="feedback"></div></div>
+</section>
+
+<section class="panel" id="theory">
+<h2>6-modul. Nazariy ma’lumotlar</h2>
+<p class="intro">Asosiy tushunchalar, formulalar, o‘lchov birliklari va kundalik hayotdagi misollar.</p>
+<div class="controls" style="margin-bottom:12px">
+<h3>Asosiy fizik kattaliklar</h3>
+<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.92rem">
+<thead><tr style="text-align:left;background:#eef4ff"><th style="padding:10px;border-bottom:1px solid #dbe5f1">Kattalik</th><th style="padding:10px;border-bottom:1px solid #dbe5f1">Formula</th><th style="padding:10px;border-bottom:1px solid #dbe5f1">SI birligi</th><th style="padding:10px;border-bottom:1px solid #dbe5f1">Izoh</th></tr></thead>
+<tbody>
+<tr><td style="padding:10px;border-bottom:1px solid #e4ebf4">Mexanik ish</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">A = Fs cos α</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">J (joule)</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Kuch va siljishga bog‘liq</td></tr>
+<tr><td style="padding:10px;border-bottom:1px solid #e4ebf4">Quvvat</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">P = A/t</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">W (watt)</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Ishning bajarilish tezligi</td></tr>
+<tr><td style="padding:10px;border-bottom:1px solid #e4ebf4">Kinetik energiya</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Eₖ = mv²/2</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">J (joule)</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Harakat tufayli energiya</td></tr>
+<tr><td style="padding:10px;border-bottom:1px solid #e4ebf4">Potensial energiya</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Eₚ = mgh</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">J (joule)</td><td style="padding:10px;border-bottom:1px solid #e4ebf4">Balandlik va massa bilan bog‘liq</td></tr>
+<tr><td style="padding:10px">Mexanik energiya</td><td style="padding:10px">E = Eₖ + Eₚ</td><td style="padding:10px">J (joule)</td><td style="padding:10px">Ideal tizimda saqlanadi</td></tr>
+</tbody></table></div>
+</div>
+<div class="labgrid">
+<div class="controls"><h3>Namuna masala 1</h3><p>Jismga 30 N kuch ta’sir etib, u kuch yo‘nalishida 4 m siljidi.</p><div class="formula">A = Fs = 30 × 4 = 120 J</div><p class="intro">Javob: mexanik ish 120 J.</p></div>
+<div class="controls"><h3>Namuna masala 2</h3><p>600 J ish 3 sekundda bajarildi.</p><div class="formula">P = A/t = 600/3 = 200 W</div><p class="intro">Javob: quvvat 200 W.</p></div>
+<div class="controls"><h3>Namuna masala 3</h3><p>2 kg jism 5 m/s tezlik bilan harakatlanadi.</p><div class="formula">Eₖ = mv²/2 = 2 × 25 / 2 = 25 J</div><p class="intro">Javob: kinetik energiya 25 J.</p></div>
+<div class="controls"><h3>Namuna masala 4</h3><p>2 kg jism 5 m balandlikda. g = 10 m/s².</p><div class="formula">Eₚ = mgh = 2 × 10 × 5 = 100 J</div><p class="intro">Javob: potensial energiya 100 J.</p></div>
+</div>
+<div class="note"><b>Eslatma:</b> 1 J = 1 N·m; 1 W = 1 J/s. α — kuch bilan siljish orasidagi burchak. Yer sirtiga yaqin hisoblarda g ≈ 9,8 m/s² yoki masala shartiga ko‘ra 10 m/s² olinadi.</div>
+</section>
+<section class="panel" id="tests">
+<h2>7-modul. Yakuniy bilim testi</h2>
+<p class="intro">10 ta savolga javob bering. Har bir to‘g‘ri javob 1 ball. Yakunda natijangiz va tavsiya ko‘rsatiladi.</p>
+<div id="finalQuiz" class="controls"></div>
+<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:13px"><button class="btn" id="gradeQuiz">Natijani tekshirish</button><button class="btn secondary" id="resetQuiz">Qayta boshlash</button></div>
+<div id="quizResult" class="note" aria-live="polite">Javoblarni tanlab, “Natijani tekshirish” tugmasini bosing.</div>
+</section>
+<section class="panel" id="conclusion">
+<h2>8-modul. Xulosa va refleksiya</h2>
+<p class="intro">Simulyatsiya yakunida kuzatuvlar va hisob-kitoblarni umumlashtiring.</p>
+<div class="controls">
+<h3>Asosiy xulosalar</h3>
+<ul style="line-height:1.8;padding-left:22px">
+<li>Mexanik ish kuch, siljish va ular orasidagi burchakka bog‘liq: A = Fs cos α.</li>
+<li>Kuch siljish yo‘nalishida bo‘lsa ish musbat, tik bo‘lsa nol, qarama-qarshi tarkib ustun bo‘lsa manfiy bo‘lishi mumkin.</li>
+<li>Quvvat bajarilgan ishning vaqtga nisbatidir. Bir xil ish kamroq vaqtda bajarilsa, quvvat kattaroq bo‘ladi.</li>
+<li>Kinetik energiya tezlikning kvadratiga bog‘liq. Tezlik ikki baravar oshganda kinetik energiya to‘rt baravar oshadi.</li>
+<li>Potensial energiya jism massasi, erkin tushish tezlanishi va tanlangan sathdan balandligiga bog‘liq.</li>
+<li>Ishqalanish hisobga olinmagan ideal tizimda kinetik va potensial energiyalar o‘zaro aylanishadi, jami mexanik energiya saqlanadi.</li>
+</ul>
+</div>
+<div class="labgrid" style="margin-top:14px">
+<div class="controls"><h3>O‘zingizni baholang</h3><p>Bugun nimalarni tushundingiz?</p>
+<label style="display:flex;gap:9px;align-items:flex-start;margin:10px 0"><input type="checkbox"> Mexanik ish formulasini qo‘llay olaman.</label>
+<label style="display:flex;gap:9px;align-items:flex-start;margin:10px 0"><input type="checkbox"> Quvvatni ish va vaqt orqali hisoblay olaman.</label>
+<label style="display:flex;gap:9px;align-items:flex-start;margin:10px 0"><input type="checkbox"> Kinetik va potensial energiyani farqlay olaman.</label>
+<label style="display:flex;gap:9px;align-items:flex-start;margin:10px 0"><input type="checkbox"> Energiya saqlanishini misol bilan tushuntira olaman.</label>
+</div>
+<div class="controls"><h3>O‘qituvchi uchun metodik xulosa</h3><p>Virtual laboratoriya abstrakt formulalarni ko‘rgazmali tajribaga aylantiradi. O‘quvchilar parametrlarni mustaqil o‘zgartirib, natijani kuzatadi, taxmin va xulosalarini tekshiradi. Darsda “taxmin qil — sinab ko‘r — izohla” yondashuvi, juftlikda muhokama va yakuniy testdan foydalanish tavsiya etiladi.</p><p class="intro">Dissertatsion tadqiqotda samaradorlikni baholash uchun simulyatsiyadan oldingi va keyingi test natijalarini yig‘ish, o‘quvchilar kuzatuvlarini qayd etish va taqqoslash mumkin. Natijalar amalda o‘lchanmasdan turib, simulyatsiya samarali ekani haqida qat’iy ilmiy xulosa chiqarilmasligi kerak.</p></div>
+</div>
+<div class="note"><b>Umumiy xulosa:</b> mexanik ish, quvvat va energiya o‘zaro bog‘liq tushunchalardir. Interaktiv tajribalar ushbu bog‘lanishlarni aniqlash, formulalarni amalda qo‘llash va fizik hodisalarni ilmiy izohlashga yordam beradi.</div>
+</section>
+
+<footer><b>O‘qituvchiga metodik tavsiya:</b> darsni muammoli savol bilan boshlang; o‘quvchilar parametrlarni o‘zgartirib natijani oldindan taxmin qilsin; tajriba natijasini yozib, xulosa chiqarsin; yakunda test bilan baholang. Bu model o‘quv maqsadida soddalashtirilgan: ishqalanish va havo qarshiligi alohida ko‘rsatilmagan. Mexanik ishda A = Fs cos α, shuning uchun 90° da ish nol, 90° dan katta burchakda manfiy bo‘lishi mumkin.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), val=id=>Number($(id).value), fmt=(n,d=2)=>Number(n.toFixed(d)).toLocaleString('uz-UZ',{maximumFractionDigits:d});
+function setOut(id,text){$(id+'Out').textContent=text}
+function drawChart(canvasId, points, label, currentX, currentY){const c=$(canvasId),ctx=c.getContext('2d'),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.strokeStyle='#dce5f0';ctx.lineWidth=1;for(let i=1;i<5;i++){ctx.beginPath();ctx.moveTo(34,i*h/5);ctx.lineTo(w-10,i*h/5);ctx.stroke()}ctx.fillStyle='#53657d';ctx.font='12px system-ui';ctx.fillText(label,10,15);let maxX=Math.max(...points.map(p=>p[0]),1),maxY=Math.max(...points.map(p=>p[1]),1);ctx.strokeStyle='#2563eb';ctx.lineWidth=3;ctx.beginPath();points.forEach((p,i)=>{let x=34+p[0]/maxX*(w-48),y=h-22-p[1]/maxY*(h-45);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.fillStyle='#ef4444';let x=34+currentX/maxX*(w-48),y=h-22-currentY/maxY*(h-45);ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#53657d';ctx.fillText('0',25,h-6);ctx.fillText(fmt(maxY,0),2,35)}
+function updateWork(){let F=val('force'),s=val('distance'),a=val('angle'),A=F*s*Math.cos(a*Math.PI/180),comp=F*Math.cos(a*Math.PI/180);setOut('force',F+' N');setOut('distance',s+' m');setOut('angle',a+'°');$('workValue').textContent=fmt(A)+' J';$('forceComponent').textContent=fmt(comp)+' N';$('workBlock').style.left=(12+Math.min(s,20)/20*68)+'%';$('workArrow').style.left=(18+Math.min(s,20)/20*50)+'%';$('workArrow').style.transform='rotate('+(-a)+'deg)';$('distLine').dataset.label=s+' m';$('workNote').textContent=a<90?'Kuchning siljish yo‘nalishidagi tarkibi musbat: ish musbat.':a===90?'Kuch siljishga tik: mexanik ish nol.':'Kuchning siljish bo‘yicha tarkibi manfiy: ish manfiy.';let pts=[];for(let x=0;x<=20;x++)pts.push([x,F*x*Math.cos(a*Math.PI/180)]);drawChart('workChart',pts,'Ish A (J)',s,A)}
+function updatePower(){let F=val('pforce'),s=val('pdistance'),t=val('ptime'),A=F*s,P=A/t;setOut('pforce',F+' N');setOut('pdistance',s+' m');setOut('ptime',t+' s');$('powerWork').textContent=fmt(A)+' J';$('powerValue').textContent=fmt(P)+' W';$('powerBlock').style.left=(12+Math.min(P,1000)/1000*68)+'%';$('powerNote').textContent='Ish '+fmt(A)+' J; vaqt '+t+' s. Vaqt kamayganda quvvat ortadi.'}
+function updateKinetic(){let m=val('kmass'),v=val('speed'),E=.5*m*v*v;setOut('kmass',m+' kg');setOut('speed',v+' m/s');$('kineticValue').textContent=fmt(E)+' J';$('kineticSpeed').textContent=v+' m/s';$('kineticBlock').style.left=(12+v/20*68)+'%';$('kineticNote').textContent=v===0?'Jism tinch: kinetik energiya nol.':'Tezlik ortishi bilan kinetik energiya tezroq ortadi, chunki v kvadratga ko‘tariladi.';let pts=[];for(let x=0;x<=20;x++)pts.push([x,.5*m*x*x]);drawChart('kineticChart',pts,'Kinetik energiya (J)',v,E)}
+function updatePotential(){let m=val('pmass'),h=val('height'),g=val('gravity'),E=m*g*h;setOut('pmass',m+' kg');setOut('height',h+' m');setOut('gravity',fmt(g,1)+' m/s²');$('potentialValue').textContent=fmt(E)+' J';$('potentialHeight').textContent=h+' m';$('potentialBlock').style.bottom=(34+h/20*115)+'px'}
+function updateConserve(){let H=val('ctotal'),m=val('cmass');$('cheight').max=H;let h=Math.min(val('cheight'),H);if(val('cheight')!==h)$('cheight').value=h;setOut('ctotal',H+' m');setOut('cmass',m+' kg');setOut('cheight',h+' m');let Ep=m*9.8*h,Et=m*9.8*H,Ek=Math.max(0,Et-Ep),v=Math.sqrt(2*9.8*(H-h));$('cEp').textContent=fmt(Ep)+' J';$('cEk').textContent=fmt(Ek)+' J';$('cE').textContent=fmt(Et)+' J';$('cV').textContent=fmt(v)+' m/s';$('conserveBlock').style.left=(12+(H-h)/H*68)+'%';$('conserveBlock').style.bottom=(34+h/H*100)+'px';$('conserveNote').textContent='Eₖ + Eₚ = '+fmt(Ek)+' + '+fmt(Ep)+' = '+fmt(Et)+' J. Ideal modelda jami mexanik energiya saqlanadi.'}
+['force','distance','angle'].forEach(id=>$(id).addEventListener('input',updateWork));
+['pforce','pdistance','ptime'].forEach(id=>$(id).addEventListener('input',updatePower));
+['kmass','speed'].forEach(id=>$(id).addEventListener('input',updateKinetic));
+['pmass','height','gravity'].forEach(id=>$(id).addEventListener('input',updatePotential));
+['ctotal','cmass','cheight'].forEach(id=>$(id).addEventListener('input',updateConserve));
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab))}));
+document.querySelectorAll('.answers').forEach(group=>group.querySelectorAll('.answer').forEach((b,i)=>b.addEventListener('click',()=>{group.querySelectorAll('.answer').forEach(x=>x.classList.remove('correct','wrong'));let ok=i===Number(group.dataset.correct);b.classList.add(ok?'correct':'wrong');group.nextElementSibling.textContent=ok?'To‘g‘ri! Barakalla.':'Yana bir bor o‘ylab ko‘ring va formulani eslang.';group.nextElementSibling.style.color=ok?'#0f8a5f':'#c2413b'})));
+
+const finalQuestions=[
+{q:'1. Mexanik ishning SI birligi qaysi?',a:['Vatt (W)','Joul (J)','Nyuton (N)','Metr (m)'],c:1,e:'Mexanik ish joule (J) bilan o‘lchanadi.'},
+{q:'2. Kuch 10 N, siljish 3 m va α = 0° bo‘lsa, ish qancha?',a:['13 J','30 J','3,3 J','0 J'],c:1,e:'A = Fs = 10 × 3 = 30 J.'},
+{q:'3. Kuch siljishga tik yo‘nalganida mexanik ish qancha?',a:['Eng katta musbat','Manfiy','Nol','Doim 1 J'],c:2,e:'cos 90° = 0, demak A = 0.'},
+{q:'4. 240 J ish 4 sekundda bajarilsa, quvvat qancha?',a:['60 W','960 W','244 W','30 W'],c:0,e:'P = A/t = 240/4 = 60 W.'},
+{q:'5. Kinetik energiya qaysi formulada ifodalanadi?',a:['mgh','Fs','mv²/2','A/t'],c:2,e:'Kinetik energiya Eₖ = mv²/2.'},
+{q:'6. Massa o‘zgarmay, tezlik 3 baravar oshsa, kinetik energiya qanday o‘zgaradi?',a:['3 baravar','6 baravar','9 baravar','O‘zgarmaydi'],c:2,e:'Eₖ tezlik kvadratiga bog‘liq: 3² = 9.'},
+{q:'7. 3 kg jism 2 m balandlikda, g = 10 m/s². Potensial energiya qancha?',a:['15 J','60 J','6 J','30 J'],c:1,e:'Eₚ = mgh = 3 × 10 × 2 = 60 J.'},
+{q:'8. Quvvat nimani ifodalaydi?',a:['Faqat jism massasini','Ishning bajarilish tezligini','Jismning balandligini','Siljish yo‘nalishini'],c:1,e:'Quvvat — vaqt birligida bajarilgan ish.'},
+{q:'9. Ishqalanish bo‘lmagan holatda tushayotgan jismda nima sodir bo‘ladi?',a:['Jami mexanik energiya yo‘qoladi','Potensial energiya kinetik energiyaga aylanadi','Harakat to‘xtaydi','Massa ortadi'],c:1,e:'Ideal modelda Ep kamayib, Ek ortadi; jami energiya saqlanadi.'},
+{q:'10. Ishqalanish mavjud bo‘lsa, mexanik energiyaning bir qismi nimaga aylanishi mumkin?',a:['Issiqlik va ichki energiyaga','Yo‘qdan paydo bo‘ladigan energiyaga','Massaga to‘liq','Faqat potensial energiyaga'],c:0,e:'Ishqalanishda mexanik energiyaning bir qismi ichki energiyaga aylanadi.'}
+];
+function renderFinalQuiz(){const host=$('finalQuiz');host.innerHTML='';finalQuestions.forEach((q,i)=>{const box=document.createElement('div');box.style.cssText='padding:13px 0;border-bottom:1px solid #e1e8f1';const title=document.createElement('div');title.className='question';title.textContent=q.q;box.appendChild(title);q.a.forEach((a,j)=>{const lab=document.createElement('label');lab.style.cssText='display:flex;gap:9px;align-items:flex-start;margin:9px 0;cursor:pointer';const inp=document.createElement('input');inp.type='radio';inp.name='finalq'+i;inp.value=j;inp.style.marginTop='4px';lab.appendChild(inp);const span=document.createElement('span');span.textContent=a;lab.appendChild(span);box.appendChild(lab)});const expl=document.createElement('div');expl.id='explain'+i;expl.style.cssText='font-size:.88rem;color:#52647b;margin-top:5px';box.appendChild(expl);host.appendChild(box)})}
+$('gradeQuiz').addEventListener('click',()=>{let score=0,answered=0;finalQuestions.forEach((q,i)=>{const chosen=document.querySelector('input[name="finalq'+i+'"]:checked'),ex=$('explain'+i);if(chosen){answered++;if(Number(chosen.value)===q.c)score++;ex.textContent=(Number(chosen.value)===q.c?'✓ To‘g‘ri. ':'✗ To‘g‘ri javob: '+q.a[q.c]+'. ')+q.e;ex.style.color=Number(chosen.value)===q.c?'#0f8a5f':'#b93832'}else{ex.textContent='Javob belgilanmagan. '+q.e;ex.style.color='#64748b'}});const pct=score*10;let msg=pct>=90?'A’lo! Mavzuni juda yaxshi o‘zlashtirgansiz.':pct>=70?'Yaxshi natija. Qiyin bo‘lgan formulalarni yana bir bor takrorlang.':pct>=50?'Qoniqarli. Nazariy ma’lumotlarni qayta ko‘rib, testni yana ishlang.':'Mavzuni qayta o‘rganing, modullardagi parametrlarni o‘zgartirib tajribalarni takrorlang.';$('quizResult').innerHTML='<b>Natija: '+score+'/10 ('+pct+'%)</b><br>Javob berilgan: '+answered+'/10.<br>'+msg});
+$('resetQuiz').addEventListener('click',()=>{document.querySelectorAll('#finalQuiz input[type=radio]').forEach(x=>x.checked=false);document.querySelectorAll('#finalQuiz [id^=explain]').forEach(x=>x.textContent='');$('quizResult').textContent='Javoblarni tanlab, “Natijani tekshirish” tugmasini bosing.'});
+renderFinalQuiz();
+
+updateWork();updatePower();updateKinetic();updatePotential();updateConserve();
+</script>
+</body></html>
